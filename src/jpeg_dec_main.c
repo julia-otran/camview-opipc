@@ -38,14 +38,11 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <time.h>
-#include <arm_neon.h>
 
-#include "colorspaces.h"
 #include "jpeg.h"
 #include "ve.h"
 #include "display.h"
 #include "memory.h"
-#include "granding.h"
 
 void set_quantization_tables(struct jpeg_t *jpeg, void *regs)
 {
@@ -394,13 +391,13 @@ void get_buffer() {
 }
 
 void hw_decode_jpeg_main(uint8_t* data, long dataLen) {
-        struct jpeg_t jpeg;
+    struct jpeg_t jpeg;
 	uint8_t *virt_input;
 
-        memset(&jpeg, 0, sizeof(jpeg));
+    memset(&jpeg, 0, sizeof(jpeg));
 
-        if (!parse_jpeg(&jpeg, data, dataLen)) {
-                printf("ERROR: Can't parse JPEG\n");
+    if (!parse_jpeg(&jpeg, data, dataLen)) {
+        printf("ERROR: Can't parse JPEG\n");
 		return;
 	}
 
@@ -423,8 +420,6 @@ void hw_decode_jpeg_main(uint8_t* data, long dataLen) {
 	ve_flush_cache(virt_input, jpeg.data_len);
 
 	get_buffer();
-        hw_decode_jpeg(&jpeg);
-	process_color_granding(jpeg.width, jpeg.height, luma_output_virt);
+    hw_decode_jpeg(&jpeg);
 	put_buffer(write_buffer);
 }
-

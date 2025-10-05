@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include <math.h>
 #include <linux/videodev2.h>
+#include <sys/ioctl.h>
 
 #include "atem.h"
 #include "cec_controls.h"
@@ -317,7 +318,7 @@ int apply_value(video_device_t *my_vd, const char *name, int min, int max, int v
 				}
 
 				ioctl(my_vd->device_file, VIDIOC_S_CTRL, &ctrl);
-				
+
 				return 1;
 			}
 		}

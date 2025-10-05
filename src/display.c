@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
-
 #include <drm/sun4i_drm.h>
 
 #include "display.h"

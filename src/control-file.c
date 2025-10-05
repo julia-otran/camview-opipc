@@ -4,9 +4,11 @@
 #include <linux/videodev2.h>
 #include <sys/inotify.h>
 #include <poll.h>
+#include <sys/ioctl.h>
+#include <json.h>
 
 #include "device.h"
-#include "json.h"
+
 
 #define CTRL_FILE "/var/www/guvcview/ctrl.json"
 
@@ -65,7 +67,7 @@ json_object* get_menu_ctrls_json(video_device_t *my_vd, int id, int type) {
 			entry = json_object_new_object();
 			json_object_object_add(entry, "menuItemName", json_object_new_string(menu.name));
 
-			if (type == V4L2_CTRL_FLAG_INTEGER_MENU) {
+			if (type == V4L2_CTRL_TYPE_INTEGER_MENU) {
 				json_object_object_add(entry, "menuItemValue", json_object_new_int64(menu.value));
 			} else {
 				json_object_object_add(entry, "menuItemValue", json_object_new_int64(menu.index));
@@ -160,7 +162,7 @@ int set_control(video_device_t *my_vd, const char *name, int32_t value) {
 				prevValue = ctrl.value;
 
 				if (prevValue != value) {
-					printf("[CONTROL] Will update %s to %i\n", ctrl->name, value);
+					printf("[CONTROL] Will update %s to %i\n", qctrl.name, value);
 
 					ctrl.value = value;
 					int result = ioctl(my_vd->device_file, VIDIOC_S_CTRL, &ctrl);

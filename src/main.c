@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <linux/videodev2.h>
 #include <pthread.h>
+#include <sys/ioctl.h>
 
 #include "main.h"
 #include "display.h"
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
                 }
             } else {
                 buffer_memory_map[i] = MAP_FAILED;
-                printf("Failed to query video buffer #%i: %s\n", strerror(errno));
+                printf("Failed to query video buffer #%i: %s\n", i, strerror(errno));
                 break;
             }
         }
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
         enum v4l2_buf_type buffer_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
         if (ioctl(video_device.device_file, VIDIOC_STREAMON, &buffer_type) == -1) {
-            printf("Failed to enable stream #%i: %s\n", strerror(errno));
+            printf("Failed to enable stream: %s\n", strerror(errno));
             close(video_device.device_file);
             continue;
         }
