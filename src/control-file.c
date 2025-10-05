@@ -10,7 +10,7 @@
 #include "device.h"
 
 
-#define CTRL_FILE "/var/www/guvcview/ctrl.json"
+#define CTRL_FILE "/var/www/camview/ctrl.json"
 
 static int inotify_fd;
 
