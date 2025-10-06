@@ -74,6 +74,8 @@ json_object* get_menu_ctrls_json(video_device_t *my_vd, int id, int type) {
 			}
 
 			json_object_array_add(json, entry);
+		} else {
+			break;
 		}
 
 		index++;
@@ -129,6 +131,9 @@ struct json_object* get_device_ctrls_json_array(video_device_t *my_vd) {
 void write_file(video_device_t *my_vd) {
 	struct json_object *json;
 
+	printf("Writing controls file...\n");
+	fflush(stdout);
+
 	json = json_object_new_object();
 
 	json_object_object_add(json, "device", get_device_ctrls_json_array(my_vd));
@@ -141,6 +146,8 @@ void write_file(video_device_t *my_vd) {
 	}
 
 	json_object_put(json);
+	printf("Writing controls file done!\n");
+	fflush(stdout);
 }
 
 int set_control(video_device_t *my_vd, const char *name, int32_t value) {
@@ -202,11 +209,21 @@ int read_device_controls(video_device_t *my_vd, struct json_object *json) {
 int read_controls(video_device_t *my_vd) {
 	FILE *in = fopen(CTRL_FILE, "r");
 
+	if (in == NULL) {
+		return 0;
+	}
+
 	fseek(in, 0L, SEEK_END);
 	uint64_t size = ftell(in) + 1;
 
 	if (size > 500000) {
 		printf("Controls file too large. Skipping.\n");
+		fclose(in);
+		return 0;
+	}
+
+	if (size < 2) {
+		printf("Controls file too small. Skipping.\n");
 		fclose(in);
 		return 0;
 	}
@@ -225,6 +242,14 @@ int read_controls(video_device_t *my_vd) {
 	buffer[size - 1] = 0;
 
 	json_object *json = json_tokener_parse(buffer);
+
+	if (json == NULL) {
+		printf("Controls file parse failed\n");
+		fflush(stdout);
+		fclose(in);
+		free(buffer);
+		return 0;
+	}
 
 	int changed = read_device_controls(my_vd, json_object_object_get(json, "device"));
 
@@ -258,5 +283,5 @@ int inotify_poll() {
 	pfd.fd = inotify_fd;
 	pfd.events = POLLIN;
 
-	return poll(&pfd, 1, -1);
+	return poll(&pfd, 1, 0);
 }

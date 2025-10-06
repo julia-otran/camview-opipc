@@ -279,7 +279,7 @@ void hw_decode_jpeg(struct jpeg_t *jpeg)
 }
 
 void hw_init(int width, int height) {
-	printf("hw_init\n");
+	printf("hw_init. %ix%i\n", width, height);
 	fflush(stdout);
 	ve_regs = ve_get(VE_ENGINE_MPEG, 0);
 

@@ -102,6 +102,7 @@ int detect_devices() {
 
 	if (msg.tx_status & CEC_TX_STATUS_OK) {
 		printf("Success found CEC TV device\n");
+		fflush(stdout);
 		return 0;
 	}
 
@@ -217,6 +218,7 @@ void init_cec_controls() {
 
 	if (cec_fd <= 0) {
 		printf("Failed to open CEC. skipping CEC ctrls.\n");
+		fflush(stdout);
 		return;
 	}
 
@@ -225,6 +227,7 @@ void init_cec_controls() {
 
 	if (detect_devices() != 0) {
 		printf("CEC destination device not found.\n");
+		fflush(stdout);
 		return;
 	}
 
