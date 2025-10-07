@@ -209,6 +209,9 @@ int read_device_controls(video_device_t *my_vd, struct json_object *json) {
 }
 
 int read_controls(video_device_t *my_vd) {
+	printf("Reading controls file...\n");
+	fflush(stdout);
+
 	FILE *in = fopen(CTRL_FILE, "r");
 
 	if (in == NULL) {
@@ -253,7 +256,6 @@ int read_controls(video_device_t *my_vd) {
 		return 0;
 	}
 
-	printf("Reading controls file...\n");
 	int changed = read_device_controls(my_vd, json_object_object_get(json, "device"));
 	fflush(stdout);
 
@@ -277,11 +279,14 @@ void write_file_controls(video_device_t *my_vd) {
 }
 
 void start_inotify_control_file() {
-	inotify_fd = inotify_init();
+	inotify_fd = inotify_init1(IN_NONBLOCK);
 	inotify_add_watch(inotify_fd, CTRL_FILE, IN_CLOSE_WRITE);
 }
 
 int inotify_poll() {
+	char buf[4096]
+               __attribute__ ((aligned(__alignof__(struct inotify_event))));
+
 	struct pollfd pfd;
 
 	pfd.fd = inotify_fd;
@@ -289,10 +294,20 @@ int inotify_poll() {
 
 	int result = poll(&pfd, 1, 0);
 
+	if (result > 0 && pfd.revents & POLLIN) {
+		int has_events;
+
+		while (read(inotify_fd, buf, sizeof(buf)) > 0) {
+			has_events = 1;
+		}
+
+		return has_events;
+	}
+
 	if (result < 0) {
 		printf("Failed polling inotify.\n");
 		fflush(stdout);
 	}
 
-	return result;
+	return 0;
 }

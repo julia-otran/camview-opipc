@@ -119,6 +119,8 @@ void* control_loop(void* args) {
     fflush(stdout);
 
     while (control_loop_run) {
+        changes_loaded = 0;
+
         if (inotify_poll() > 0) {
             load_file_controls(&video_device, &changes_loaded);
         }
@@ -131,7 +133,6 @@ void* control_loop(void* args) {
 
             if (loop_count > 20) {
                 write_file_controls(&video_device);
-                inotify_poll();
                 has_changes = 0;
                 loop_count = 0;
             }
@@ -142,7 +143,6 @@ void* control_loop(void* args) {
 
     if (has_changes) {
         write_file_controls(&video_device);
-        inotify_poll();
     }
 }
 
@@ -318,7 +318,9 @@ int main(int argc, char *argv[])
             usleep(100000);
 
             if (capture_loop_run == 0 && control_loop_run == 0) {
-                ts.tv_sec = 5;
+                clock_gettime(CLOCK_REALTIME, &ts);
+
+                ts.tv_sec = +2;
                 ts.tv_nsec = 0;
 
                 if (pthread_timedjoin_np(capture_thread_id, 0, &ts) != 0) {
@@ -327,7 +329,9 @@ int main(int argc, char *argv[])
                     pthread_cancel(capture_thread_id);
                 }
 
-                ts.tv_sec = 5;
+                clock_gettime(CLOCK_REALTIME, &ts);
+
+                ts.tv_sec += 2;
                 ts.tv_nsec = 0;
 
                 if (pthread_timedjoin_np(control_thread_id, 0, &ts) != 0) {
