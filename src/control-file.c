@@ -204,6 +204,8 @@ int read_device_controls(video_device_t *my_vd, struct json_object *json) {
 			changed = 1;
 		}
 	}
+
+	return changed;
 }
 
 int read_controls(video_device_t *my_vd) {
@@ -251,7 +253,9 @@ int read_controls(video_device_t *my_vd) {
 		return 0;
 	}
 
+	printf("Reading controls file...\n");
 	int changed = read_device_controls(my_vd, json_object_object_get(json, "device"));
+	fflush(stdout);
 
 	json_object_put(json);
 	free(buffer);
@@ -283,5 +287,12 @@ int inotify_poll() {
 	pfd.fd = inotify_fd;
 	pfd.events = POLLIN;
 
-	return poll(&pfd, 1, 0);
+	int result = poll(&pfd, 1, 0);
+
+	if (result < 0) {
+		printf("Failed polling inotify.\n");
+		fflush(stdout);
+	}
+
+	return result;
 }

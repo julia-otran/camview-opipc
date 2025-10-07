@@ -60,8 +60,12 @@ void signal_callback_handler(int signum)
 void* capture_loop(void* args) {
     enum v4l2_buf_type buffer_type = current_format_desc.type;
 
+    printf("Enabling stream\n");
+    fflush(stdout);
+
     if (ioctl(video_device.device_file, VIDIOC_STREAMON, &buffer_type) != 0) {
         printf("Failed to enable stream: %s\n", strerror(errno));
+        fflush(stdout);
         capture_loop_run = 0;
         control_loop_run = 0;
         return 0;
@@ -70,6 +74,8 @@ void* capture_loop(void* args) {
     while (capture_loop_run) {
         struct v4l2_buffer buf;
         memset(&buf, 0, sizeof(buf));
+
+        buf.type = buffer_type;
 
         if (ioctl(video_device.device_file, VIDIOC_DQBUF, &buf) == 0) {
             hw_decode_jpeg_main(buffer_memory_map[buf.index], buf.bytesused);
@@ -113,7 +119,7 @@ void* control_loop(void* args) {
     fflush(stdout);
 
     while (control_loop_run) {
-        if (inotify_poll()) {
+        if (inotify_poll() > 0) {
             load_file_controls(&video_device, &changes_loaded);
         }
 
@@ -290,9 +296,6 @@ int main(int argc, char *argv[])
             close(video_device.device_file);
             continue;
         }
-
-        printf("Enabling stream\n");
-        fflush(stdout);
 
         printf("Try init CEC controls\n");
         fflush(stdout);
