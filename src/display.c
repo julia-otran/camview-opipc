@@ -71,6 +71,10 @@ static buffer_t current_available_buffer;
 static uint8_t run_video_update;
 static pthread_t display_thread;
 
+static int display_initialized = 0;
+
+struct drm_sun4i_fcc_params fcc;
+
 void forward(buffer_t arr) {
 	arr[0] = arr[1];
 	arr[1] = arr[2];
@@ -134,6 +138,8 @@ void* display_thread_loop(void *data) {
 					exit(1);
 				}
 			}
+
+			display_initialized = 1;
 		}
 
 		if (prev_display_buffer) {
@@ -552,6 +558,25 @@ void setPlanesColorFormat() {
 	fflush(stdout);
 }
 
+void get_drm_fcc(struct drm_sun4i_fcc_params *fcc_out) {
+	memcpy(fcc_out, &fcc, sizeof(fcc));
+}
+
+void set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in) {
+	if (!display_initialized) {
+		return;
+	}
+
+	if (memcmp(fcc_in, &fcc, sizeof(fcc)) == 0) {
+		return 0;
+	}
+
+	memcpy(&fcc, fcc_in, sizeof(fcc));
+	drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_FCC_PARAMS, &fcc);
+
+	return 1;
+}
+
 void init_display(int width, int height, int format) {
 	printf("Init buffers\n");
 
@@ -737,6 +762,8 @@ void init_display(int width, int height, int format) {
 		memset(buffer_map3 + v_offset, V_VALUE, v_size);
 	}
 
+	memset(&fcc, 0, sizeof(fcc));
+
 	if (buf_id) {
 		printf("Setting color format on planes\n");
 		fflush(stdout);
@@ -769,6 +796,7 @@ void terminate_display()
 		return;
 	}
 
+	display_initialized = 0;
 	run_video_update = 0;
 	pthread_cond_signal(&display_buffer_cond);
 	pthread_join(display_thread, &thread_return);

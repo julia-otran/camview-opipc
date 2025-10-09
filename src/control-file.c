@@ -6,9 +6,10 @@
 #include <poll.h>
 #include <sys/ioctl.h>
 #include <json.h>
+#include <drm/sun4i_drm.h>
 
 #include "device.h"
-
+#include "display.h"
 
 #define CTRL_FILE "/var/www/camview/ctrl.json"
 
@@ -128,6 +129,47 @@ struct json_object* get_device_ctrls_json_array(video_device_t *my_vd) {
 	return json;
 }
 
+struct json_object* get_display_ctrls_json_array() {
+	struct json_object *json;
+	struct json_object *fcc;
+
+	fcc = json_object_new_object();
+	struct drm_sun4i_fcc_params fcc_dsp;
+
+	get_drm_fcc(&fcc_dsp);
+
+	json_object_object_add(fcc, "enable", json_object_new_int(fcc.enable));
+	json_object_object_add(fcc, "hr_hue_min", json_object_new_int(fcc.hr_hue_min));
+	json_object_object_add(fcc, "hr_hue_max", json_object_new_int(fcc.hr_hue_max));
+	json_object_object_add(fcc, "hg_hue_min", json_object_new_int(fcc.hg_hue_min));
+	json_object_object_add(fcc, "hg_hue_max", json_object_new_int(fcc.hg_hue_max));
+	json_object_object_add(fcc, "hb_hue_min", json_object_new_int(fcc.hb_hue_min));
+	json_object_object_add(fcc, "hb_hue_max", json_object_new_int(fcc.hb_hue_max));
+	json_object_object_add(fcc, "hc_hue_min", json_object_new_int(fcc.hc_hue_min));
+	json_object_object_add(fcc, "hc_hue_max", json_object_new_int(fcc.hc_hue_max));
+	json_object_object_add(fcc, "hm_hue_min", json_object_new_int(fcc.hm_hue_min));
+	json_object_object_add(fcc, "hm_hue_max", json_object_new_int(fcc.hm_hue_max));
+	json_object_object_add(fcc, "hy_hue_min", json_object_new_int(fcc.hy_hue_min));
+	json_object_object_add(fcc, "hy_hue_max", json_object_new_int(fcc.hy_hue_max));
+	json_object_object_add(fcc, "hr_hue_gain", json_object_new_int(fcc.hr_hue_gain));
+	json_object_object_add(fcc, "hr_sat_gain", json_object_new_int(fcc.hr_sat_gain));
+	json_object_object_add(fcc, "hg_hue_gain", json_object_new_int(fcc.hg_hue_gain));
+	json_object_object_add(fcc, "hg_sat_gain", json_object_new_int(fcc.hg_sat_gain));
+	json_object_object_add(fcc, "hb_hue_gain", json_object_new_int(fcc.hb_hue_gain));
+	json_object_object_add(fcc, "hb_sat_gain", json_object_new_int(fcc.hb_sat_gain));
+	json_object_object_add(fcc, "hc_hue_gain", json_object_new_int(fcc.hc_hue_gain));
+	json_object_object_add(fcc, "hc_sat_gain", json_object_new_int(fcc.hc_sat_gain));
+	json_object_object_add(fcc, "hm_hue_gain", json_object_new_int(fcc.hm_hue_gain));
+	json_object_object_add(fcc, "hm_sat_gain", json_object_new_int(fcc.hm_sat_gain));
+	json_object_object_add(fcc, "hy_hue_gain", json_object_new_int(fcc.hy_hue_gain));
+	json_object_object_add(fcc, "hy_sat_gain", json_object_new_int(fcc.hy_sat_gain));
+
+	json = json_object_new_object();
+	json_object_object_add(json, "fcc", fcc);
+
+	return json;
+}
+
 void write_file(video_device_t *my_vd) {
 	struct json_object *json;
 
@@ -137,6 +179,7 @@ void write_file(video_device_t *my_vd) {
 	json = json_object_new_object();
 
 	json_object_object_add(json, "device", get_device_ctrls_json_array(my_vd));
+	json_object_object_add(json, "display", get_display_ctrls_json_array(my_vd));
 
 	FILE *out = fopen(CTRL_FILE, "wb");
 
@@ -163,7 +206,7 @@ int set_control(video_device_t *my_vd, const char *name, int32_t value) {
 
 		if (ioctl(my_vd->device_file, VIDIOC_QUERYCTRL, &qctrl) == 0) {
 			if (
-				strcmp(qctrl.name, name) == 0 && 
+				strcmp(qctrl.name, name) == 0 &&
 				ioctl(my_vd->device_file, VIDIOC_G_CTRL, &ctrl) == 0
 			) {
 				prevValue = ctrl.value;
@@ -204,6 +247,42 @@ int read_device_controls(video_device_t *my_vd, struct json_object *json) {
 			changed = 1;
 		}
 	}
+
+	return changed;
+}
+
+int read_display_controls(struct json_object *json) {
+	struct json_object *fcc = json_object_object_get(json, "fcc");
+
+	struct drm_sun4i_fcc_params fcc_dsp;
+
+	fcc_dsp.enable = json_object_get_int(json_object_object_get(fcc, "enable"));
+	fcc_dsp.hr_hue_min = json_object_get_int(json_object_object_get(fcc, "hr_hue_min"));
+	fcc_dsp.hr_hue_max = json_object_get_int(json_object_object_get(fcc, "hr_hue_max"));
+	fcc_dsp.hg_hue_min = json_object_get_int(json_object_object_get(fcc, "hg_hue_min"));
+	fcc_dsp.hg_hue_max = json_object_get_int(json_object_object_get(fcc, "hg_hue_max"));
+	fcc_dsp.hb_hue_min = json_object_get_int(json_object_object_get(fcc, "hb_hue_min"));
+	fcc_dsp.hb_hue_max = json_object_get_int(json_object_object_get(fcc, "hb_hue_max"));
+	fcc_dsp.hc_hue_min = json_object_get_int(json_object_object_get(fcc, "hc_hue_min"));
+	fcc_dsp.hc_hue_max = json_object_get_int(json_object_object_get(fcc, "hc_hue_max"));
+	fcc_dsp.hm_hue_min = json_object_get_int(json_object_object_get(fcc, "hm_hue_min"));
+	fcc_dsp.hm_hue_max = json_object_get_int(json_object_object_get(fcc, "hm_hue_max"));
+	fcc_dsp.hy_hue_min = json_object_get_int(json_object_object_get(fcc, "hy_hue_min"));
+	fcc_dsp.hy_hue_max = json_object_get_int(json_object_object_get(fcc, "hy_hue_max"));
+	fcc_dsp.hr_hue_gain = json_object_get_int(json_object_object_get(fcc, "hr_hue_gain"));
+	fcc_dsp.hr_sat_gain = json_object_get_int(json_object_object_get(fcc, "hr_sat_gain"));
+	fcc_dsp.hg_hue_gain = json_object_get_int(json_object_object_get(fcc, "hg_hue_gain"));
+	fcc_dsp.hg_sat_gain = json_object_get_int(json_object_object_get(fcc, "hg_sat_gain"));
+	fcc_dsp.hb_hue_gain = json_object_get_int(json_object_object_get(fcc, "hb_hue_gain"));
+	fcc_dsp.hb_sat_gain = json_object_get_int(json_object_object_get(fcc, "hb_sat_gain"));
+	fcc_dsp.hc_hue_gain = json_object_get_int(json_object_object_get(fcc, "hc_hue_gain"));
+	fcc_dsp.hc_sat_gain = json_object_get_int(json_object_object_get(fcc, "hc_sat_gain"));
+	fcc_dsp.hm_hue_gain = json_object_get_int(json_object_object_get(fcc, "hm_hue_gain"));
+	fcc_dsp.hm_sat_gain = json_object_get_int(json_object_object_get(fcc, "hm_sat_gain"));
+	fcc_dsp.hy_hue_gain = json_object_get_int(json_object_object_get(fcc, "hy_hue_gain"));
+	fcc_dsp.hy_sat_gain = json_object_get_int(json_object_object_get(fcc, "hy_sat_gain"));
+
+	int changed = set_drm_fcc(&fcc_dsp);
 
 	return changed;
 }
@@ -257,6 +336,9 @@ int read_controls(video_device_t *my_vd) {
 	}
 
 	int changed = read_device_controls(my_vd, json_object_object_get(json, "device"));
+
+	changed |= read_display_controls(json_object_object_get(json, "display"));
+
 	fflush(stdout);
 
 	json_object_put(json);

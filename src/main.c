@@ -79,7 +79,7 @@ void* capture_loop(void* args) {
 
         if (ioctl(video_device.device_file, VIDIOC_DQBUF, &buf) == 0) {
             hw_decode_jpeg_main(buffer_memory_map[buf.index], buf.bytesused);
-            
+
             if (ioctl(video_device.device_file, VIDIOC_QBUF, &buf) != 0) {
                 printf("VIDIOC_QBUF Failed: %s\n", strerror(errno));
                 fflush(stdout);
@@ -114,7 +114,7 @@ void* control_loop(void* args) {
     fflush(stdout);
 
     inotify_poll();
-    
+
     printf("finished inotify_poll\n");
     fflush(stdout);
 
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
         req.count  = CAPTURE_BUFFER_COUNT;
         req.type   = current_format_desc.type;//use the mmap for mapping the buffer
         req.memory = V4L2_MEMORY_MMAP;
-        
+
         printf("Requesting Buffers\n");
         fflush(stdout);
 
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
                     buf.length,
                     PROT_READ | PROT_WRITE /* required */,
                     MAP_SHARED /* recommended */,
-                    video_device.device_file, 
+                    video_device.device_file,
                     buf.m.offset
                 );
 
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
                 if (pthread_timedjoin_np(control_thread_id, 0, &ts) != 0) {
                     printf("Canceling control thread...\n");
                     fflush(stdout);
-                    pthread_cancel(control_thread_id);    
+                    pthread_cancel(control_thread_id);
                 }
 
                 break;

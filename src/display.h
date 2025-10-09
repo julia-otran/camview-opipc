@@ -3,9 +3,13 @@
 
 #include <sys/types.h>
 #include <inttypes.h>
+#include <drm/sun4i_drm.h>
 
 void start_drm();
 void stop_drm();
+
+void get_drm_fcc(struct drm_sun4i_fcc_params *fcc_out);
+int set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in);
 
 void init_display(int width, int height, int format);
 void terminate_display();
