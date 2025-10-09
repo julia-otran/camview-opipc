@@ -562,7 +562,7 @@ void get_drm_fcc(struct drm_sun4i_fcc_params *fcc_out) {
 	memcpy(fcc_out, &fcc, sizeof(fcc));
 }
 
-void set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in) {
+int set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in) {
 	if (!display_initialized) {
 		return;
 	}
