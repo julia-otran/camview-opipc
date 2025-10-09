@@ -72,6 +72,7 @@ static uint8_t run_video_update;
 static pthread_t display_thread;
 
 static int display_initialized = 0;
+static int pending_controls_apply = 0;
 
 struct drm_sun4i_fcc_params fcc;
 
@@ -140,6 +141,11 @@ void* display_thread_loop(void *data) {
 			}
 
 			display_initialized = 1;
+
+			if (pending_controls_apply) {
+				drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_FCC_PARAMS, &fcc);
+				pending_controls_apply = 0;
+			}
 		}
 
 		if (prev_display_buffer) {
@@ -563,16 +569,17 @@ void get_drm_fcc(struct drm_sun4i_fcc_params *fcc_out) {
 }
 
 int set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in) {
-	if (!display_initialized) {
-		return;
-	}
-
 	if (memcmp(fcc_in, &fcc, sizeof(fcc)) == 0) {
 		return 0;
 	}
 
 	memcpy(&fcc, fcc_in, sizeof(fcc));
-	drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_FCC_PARAMS, &fcc);
+
+	if (display_initialized) {
+		drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_FCC_PARAMS, &fcc);
+	} else {
+		pending_controls_apply = 1;
+	}
 
 	return 1;
 }
@@ -761,8 +768,6 @@ void init_display(int width, int height, int format) {
 		memset(buffer_map3 + u_offset, U_VALUE, u_size);
 		memset(buffer_map3 + v_offset, V_VALUE, v_size);
 	}
-
-	memset(&fcc, 0, sizeof(fcc));
 
 	if (buf_id) {
 		printf("Setting color format on planes\n");
