@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
             if (capture_loop_run == 0 && control_loop_run == 0) {
                 clock_gettime(CLOCK_REALTIME, &ts);
 
-                ts.tv_sec = +2;
+                ts.tv_sec += 2;
                 ts.tv_nsec = 0;
 
                 if (pthread_timedjoin_np(capture_thread_id, 0, &ts) != 0) {
