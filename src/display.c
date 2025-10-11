@@ -75,6 +75,7 @@ static int display_initialized = 0;
 static int pending_controls_apply = 0;
 
 struct drm_sun4i_fcc_params fcc;
+struct drm_sun8i_bws_params bws;
 
 void forward(buffer_t arr) {
 	arr[0] = arr[1];
@@ -144,6 +145,7 @@ void* display_thread_loop(void *data) {
 
 			if (pending_controls_apply) {
 				drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_FCC_PARAMS, &fcc);
+				drmIoctl(drm_fd, DRM_IOCTL_SUN8I_SET_BWS_PARAMS, &bws);
 				pending_controls_apply = 0;
 			}
 		}
@@ -568,6 +570,10 @@ void get_drm_fcc(struct drm_sun4i_fcc_params *fcc_out) {
 	memcpy(fcc_out, &fcc, sizeof(fcc));
 }
 
+void get_drm_bws(struct drm_sun8i_bws_params *bws_out) {
+	memcpy(bws_out, &bws, sizeof(bws));
+}
+
 int set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in) {
 	if (memcmp(fcc_in, &fcc, sizeof(fcc)) == 0) {
 		return 0;
@@ -577,6 +583,22 @@ int set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in) {
 
 	if (display_initialized) {
 		drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_FCC_PARAMS, &fcc);
+	} else {
+		pending_controls_apply = 1;
+	}
+
+	return 1;
+}
+
+int set_drm_bws(struct drm_sun8i_bws_params *bws_in) {
+	if (memcmp(bws_in, &bws, sizeof(bws)) == 0) {
+		return 0;
+	}
+
+	memcpy(&bws, bws_in, sizeof(bws));
+
+	if (display_initialized) {
+		drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_BWS_PARAMS, &bws);
 	} else {
 		pending_controls_apply = 1;
 	}

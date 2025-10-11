@@ -132,11 +132,15 @@ struct json_object* get_device_ctrls_json_array(video_device_t *my_vd) {
 struct json_object* get_display_ctrls_json_array() {
 	struct json_object *json;
 	struct json_object *fcc;
+	struct json_object *bws;
+	struct drm_sun4i_fcc_params fcc_dsp;
+	struct drm_sun8i_bws_params bws_dsp;
 
 	fcc = json_object_new_object();
-	struct drm_sun4i_fcc_params fcc_dsp;
+	bws = json_object_new_object();
 
 	get_drm_fcc(&fcc_dsp);
+	get_drm_bws(&bws_dsp);
 
 	json_object_object_add(fcc, "enable", json_object_new_int(fcc_dsp.enable));
 	json_object_object_add(fcc, "hr_hue_min", json_object_new_int(fcc_dsp.hr_hue_min));
@@ -164,8 +168,19 @@ struct json_object* get_display_ctrls_json_array() {
 	json_object_object_add(fcc, "hy_hue_gain", json_object_new_int(fcc_dsp.hy_hue_gain));
 	json_object_object_add(fcc, "hy_sat_gain", json_object_new_int(fcc_dsp.hy_sat_gain));
 
+	json_object_object_add(bws, "enable", json_object_new_int(bws_dsp.enable));
+	json_object_object_add(bws, "min", json_object_new_int(bws_dsp.min));
+	json_object_object_add(bws, "black", json_object_new_int(bws_dsp.black));
+	json_object_object_add(bws, "white", json_object_new_int(bws_dsp.white));
+	json_object_object_add(bws, "max", json_object_new_int(bws_dsp.max));
+	json_object_object_add(bws, "slope0", json_object_new_int(bws_dsp.slope0));
+	json_object_object_add(bws, "slope1", json_object_new_int(bws_dsp.slope1));
+	json_object_object_add(bws, "slope2", json_object_new_int(bws_dsp.slope2));
+	json_object_object_add(bws, "slope3", json_object_new_int(bws_dsp.slope3));
+
 	json = json_object_new_object();
 	json_object_object_add(json, "fcc", fcc);
+	json_object_object_add(json, "bws", bws);
 
 	return json;
 }
@@ -253,8 +268,10 @@ int read_device_controls(video_device_t *my_vd, struct json_object *json) {
 
 int read_display_controls(struct json_object *json) {
 	struct json_object *fcc = json_object_object_get(json, "fcc");
+	struct json_object *bws = json_object_object_get(json, "bws");
 
 	struct drm_sun4i_fcc_params fcc_dsp;
+	struct drm_sun8i_bws_params bws_dsp;
 
 	fcc_dsp.enable = json_object_get_int(json_object_object_get(fcc, "enable"));
 	fcc_dsp.hr_hue_min = json_object_get_int(json_object_object_get(fcc, "hr_hue_min"));
@@ -282,7 +299,18 @@ int read_display_controls(struct json_object *json) {
 	fcc_dsp.hy_hue_gain = json_object_get_int(json_object_object_get(fcc, "hy_hue_gain"));
 	fcc_dsp.hy_sat_gain = json_object_get_int(json_object_object_get(fcc, "hy_sat_gain"));
 
+	bws_dsp.enable = json_object_get_int(json_object_object_get(bws, "enable"));
+	bws_dsp.min = json_object_get_int(json_object_object_get(bws, "min"));
+	bws_dsp.black = json_object_get_int(json_object_object_get(bws, "black"));
+	bws_dsp.white = json_object_get_int(json_object_object_get(bws, "white"));
+	bws_dsp.max = json_object_get_int(json_object_object_get(bws, "max"));
+	bws_dsp.slope0 = json_object_get_int(json_object_object_get(bws, "slope0"));
+	bws_dsp.slope1 = json_object_get_int(json_object_object_get(bws, "slope1"));
+	bws_dsp.slope2 = json_object_get_int(json_object_object_get(bws, "slope2"));
+	bws_dsp.slope3 = json_object_get_int(json_object_object_get(bws, "slope3"));
+
 	int changed = set_drm_fcc(&fcc_dsp);
+	changed |= set_drm_bws(&bws_dsp);
 
 	return changed;
 }

@@ -11,6 +11,9 @@ void stop_drm();
 void get_drm_fcc(struct drm_sun4i_fcc_params *fcc_out);
 int set_drm_fcc(struct drm_sun4i_fcc_params *fcc_in);
 
+void get_drm_bws(struct drm_sun8i_bws_params *bws_out);
+int set_drm_bws(struct drm_sun8i_bws_params *bws_in);
+
 void init_display(int width, int height, int format);
 void terminate_display();
 void deallocate_buffers();
