@@ -6,7 +6,10 @@
 
 void load_file_controls(video_device_t *my_vd, int *changes_loaded);
 void write_file_controls(video_device_t *my_vd);
+
 void start_inotify_control_file();
+void stop_inotify_control_file();
+
 int inotify_poll();
 
 #endif

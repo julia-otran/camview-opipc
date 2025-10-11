@@ -110,6 +110,8 @@ void* control_loop(void* args) {
 
     write_file_controls(&video_device);
 
+    start_inotify_control_file();
+
     printf("Calling inotify_poll\n");
     fflush(stdout);
 
@@ -144,6 +146,8 @@ void* control_loop(void* args) {
     if (has_changes) {
         write_file_controls(&video_device);
     }
+
+    stop_inotify_control_file();
 }
 
 int main(int argc, char *argv[])
@@ -157,8 +161,6 @@ int main(int argc, char *argv[])
     ve_open();
 
     device_loop_run = 1;
-
-    start_inotify_control_file();
 
     while (device_loop_run) {
         fflush(stdout);

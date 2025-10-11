@@ -421,3 +421,7 @@ int inotify_poll() {
 
 	return 0;
 }
+
+void stop_inotify_control_file() {
+	close(inotify_fd);
+}
