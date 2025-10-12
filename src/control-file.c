@@ -405,10 +405,14 @@ int inotify_poll() {
 	int result = poll(&pfd, 1, 0);
 
 	if (result > 0 && pfd.revents & POLLIN) {
-		int has_events;
+		int has_events = 0;
 
 		while (read(inotify_fd, buf, sizeof(buf)) > 0) {
 			has_events = 1;
+		}
+
+		if (has_events) {
+			inotify_add_watch(inotify_fd, CTRL_FILE, IN_CLOSE_WRITE);
 		}
 
 		return has_events;
