@@ -598,7 +598,7 @@ int set_drm_bws(struct drm_sun8i_bws_params *bws_in) {
 	memcpy(&bws, bws_in, sizeof(bws));
 
 	if (display_initialized) {
-		drmIoctl(drm_fd, DRM_IOCTL_SUN4I_SET_BWS_PARAMS, &bws);
+		drmIoctl(drm_fd, DRM_IOCTL_SUN8I_SET_BWS_PARAMS, &bws);
 	} else {
 		pending_controls_apply = 1;
 	}
