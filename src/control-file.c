@@ -133,14 +133,18 @@ struct json_object* get_display_ctrls_json_array() {
 	struct json_object *json;
 	struct json_object *fcc;
 	struct json_object *bws;
+	struct json_object *lti;
 	struct drm_sun4i_fcc_params fcc_dsp;
 	struct drm_sun8i_bws_params bws_dsp;
+	struct drm_sun8i_lti_params lti_dsp;
 
 	fcc = json_object_new_object();
 	bws = json_object_new_object();
+	lti = json_object_new_object();
 
 	get_drm_fcc(&fcc_dsp);
 	get_drm_bws(&bws_dsp);
+	get_drm_lti(&lti_dsp);
 
 	json_object_object_add(fcc, "enable", json_object_new_int(fcc_dsp.enable));
 	json_object_object_add(fcc, "hr_hue_min", json_object_new_int(fcc_dsp.hr_hue_min));
@@ -178,9 +182,27 @@ struct json_object* get_display_ctrls_json_array() {
 	json_object_object_add(bws, "slope2", json_object_new_int(bws_dsp.slope2));
 	json_object_object_add(bws, "slope3", json_object_new_int(bws_dsp.slope3));
 
+	json_object_object_add(lti, "enable", json_object_new_int(lti_dsp.enable));
+	json_object_object_add(lti, "c0", json_object_new_int(lti_dsp.c0));
+	json_object_object_add(lti, "c1", json_object_new_int(lti_dsp.c1));
+	json_object_object_add(lti, "c2", json_object_new_int(lti_dsp.c2));
+	json_object_object_add(lti, "c3", json_object_new_int(lti_dsp.c3));
+	json_object_object_add(lti, "c4", json_object_new_int(lti_dsp.c4));
+	json_object_object_add(lti, "fir_gain", json_object_new_int(lti_dsp.fir_gain));
+	json_object_object_add(lti, "cor_th", json_object_new_int(lti_dsp.cor_th));
+	json_object_object_add(lti, "diff_offset", json_object_new_int(lti_dsp.diff_offset));
+	json_object_object_add(lti, "diff_slope", json_object_new_int(lti_dsp.diff_slope));
+	json_object_object_add(lti, "edge_gain", json_object_new_int(lti_dsp.edge_gain));
+	json_object_object_add(lti, "core_x", json_object_new_int(lti_dsp.core_x));
+	json_object_object_add(lti, "clip_y", json_object_new_int(lti_dsp.clip_y));
+	json_object_object_add(lti, "peak_limit", json_object_new_int(lti_dsp.peak_limit));
+	json_object_object_add(lti, "win_expansion", json_object_new_int(lti_dsp.win_expansion));
+	json_object_object_add(lti, "edge_level_th", json_object_new_int(lti_dsp.edge_level_th));
+
 	json = json_object_new_object();
 	json_object_object_add(json, "fcc", fcc);
 	json_object_object_add(json, "bws", bws);
+	json_object_object_add(json, "lti", lti);
 
 	return json;
 }
@@ -269,9 +291,11 @@ int read_device_controls(video_device_t *my_vd, struct json_object *json) {
 int read_display_controls(struct json_object *json) {
 	struct json_object *fcc = json_object_object_get(json, "fcc");
 	struct json_object *bws = json_object_object_get(json, "bws");
+	struct json_object *lti = json_object_object_get(json, "lti");
 
 	struct drm_sun4i_fcc_params fcc_dsp;
 	struct drm_sun8i_bws_params bws_dsp;
+	struct drm_sun8i_lti_params lti_dsp;
 
 	fcc_dsp.enable = json_object_get_int(json_object_object_get(fcc, "enable"));
 	fcc_dsp.hr_hue_min = json_object_get_int(json_object_object_get(fcc, "hr_hue_min"));
@@ -309,8 +333,26 @@ int read_display_controls(struct json_object *json) {
 	bws_dsp.slope2 = json_object_get_int(json_object_object_get(bws, "slope2"));
 	bws_dsp.slope3 = json_object_get_int(json_object_object_get(bws, "slope3"));
 
+	lti_dsp.enable = json_object_get_int(json_object_object_get(lti, "enable"));
+	lti_dsp.c0 = json_object_get_int(json_object_object_get(lti, "c0"));
+	lti_dsp.c1 = json_object_get_int(json_object_object_get(lti, "c1"));
+	lti_dsp.c2 = json_object_get_int(json_object_object_get(lti, "c2"));
+	lti_dsp.c3 = json_object_get_int(json_object_object_get(lti, "c3"));
+	lti_dsp.c4 = json_object_get_int(json_object_object_get(lti, "c4"));
+	lti_dsp.fir_gain = json_object_get_int(json_object_object_get(lti, "fir_gain"));
+	lti_dsp.cor_th = json_object_get_int(json_object_object_get(lti, "cor_th"));
+	lti_dsp.diff_offset = json_object_get_int(json_object_object_get(lti, "diff_offset"));
+	lti_dsp.diff_slope = json_object_get_int(json_object_object_get(lti, "diff_slope"));
+	lti_dsp.edge_gain = json_object_get_int(json_object_object_get(lti, "edge_gain"));
+	lti_dsp.core_x = json_object_get_int(json_object_object_get(lti, "core_x"));
+	lti_dsp.clip_y = json_object_get_int(json_object_object_get(lti, "clip_y"));
+	lti_dsp.peak_limit = json_object_get_int(json_object_object_get(lti, "peak_limit"));
+	lti_dsp.win_expansion = json_object_get_int(json_object_object_get(lti, "win_expansion"));
+	lti_dsp.edge_level_th = json_object_get_int(json_object_object_get(lti, "edge_level_th"));
+
 	int changed = set_drm_fcc(&fcc_dsp);
 	changed |= set_drm_bws(&bws_dsp);
+	changed |= set_drm_lti(&lti_dsp);
 
 	return changed;
 }
